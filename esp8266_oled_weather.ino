@@ -278,7 +278,7 @@ void drawDateTime(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, in
 
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64 + x, 38 + y, "HUM: "+String(currentWeather.hum)+"%");
+  display->drawString(64 + x, 38 + y, "RH: "+String(currentWeather.hum)+"%");
   
 }
 //绘制当前天气
