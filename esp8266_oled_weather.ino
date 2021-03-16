@@ -28,14 +28,16 @@
 #include "WeatherStationFonts.h"
 #include "WeatherStationImages.h"
 
-#include <FastLED.h>
+//#include <FastLED.h>
+
+#include <ArduinoOTA.h>
 
 
 //LED信号线
-#define LED_PIN 1
+//#define LED_PIN 1
 //30颗LED
-#define NUM_LEDS 30
-CRGB leds[NUM_LEDS];
+//#define NUM_LEDS 30
+//CRGB leds[NUM_LEDS];
 /***************************
    Begin Settings
  **************************/
@@ -66,9 +68,13 @@ const int SDC_PIN = 4; //D4;
 //const String OPEN_WEATHER_MAP_LOCATION_ID = "";
 
 // https://wx.jdcloud.com/market/datas/26/10610 京东和风 appid
-const String JD_APP_ID = " ";
+const String JD_APP_ID = "";
 // https://wx.jdcloud.com/market/datas/26/10610 京东和风 城市
-const String JD_LOCATION_ID = " ";
+//弃用
+//const String JD_LOCATION_ID = "";
+//百度 api
+const String BAIDU_AK = "";
+const String CITY_URL = "http://api.map.baidu.com/location/ip?coor=bd09ll&ak="+BAIDU_AK;
 
 //弃用
 String OPEN_WEATHER_MAP_LANGUAGE = "zh_cn";
@@ -139,8 +145,7 @@ int h = 0;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println();
-  Serial.println();
+  Serial.println("init");
 
   // initialize dispaly
   display.init();
@@ -197,13 +202,18 @@ void setup() {
 
   updateData(&display);
   
-  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.setBrightness(20);//亮度
+  //FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
+  //FastLED.setBrightness(20);//亮度
+
+  // OTA设置并启动
+  ArduinoOTA.setHostname("ESP8266-OLED-TQ");
+  ArduinoOTA.setPassword("12345678");
+  ArduinoOTA.begin();
 
 }
 
 void loop() {
-
+  ArduinoOTA.handle();
   if (millis() - timeSinceLastWUpdate > (1000L * UPDATE_INTERVAL_SECS)) {
     setReadyForWeatherUpdate();
     timeSinceLastWUpdate = millis();
@@ -247,7 +257,7 @@ void updateData(OLEDDisplay *display) {
   drawProgress(display, 30, "Updating weather...");
   delay(3000);
   drawProgress(display, 50, "Updating forecasts...");
-  forecastClient.updateForecastsById(forecasts, &currentWeather, JD_APP_ID, JD_LOCATION_ID, MAX_FORECASTS);
+  forecastClient.updateForecastsById(forecasts, &currentWeather, JD_APP_ID, CITY_URL, MAX_FORECASTS);
 
 
   readyForWeatherUpdate = false;
@@ -401,13 +411,22 @@ void drawBigTime(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int
   struct tm* timeInfo;
   timeInfo = localtime(&now);
   char buff[16];
+
+
   display->setTextAlignment(TEXT_ALIGN_CENTER);
+//  display->setFont(ArialMT_Plain_10);
+//  String date = WDAY_NAMES[timeInfo->tm_wday];
+//  //年-月-日 星期
+//  sprintf_P(buff, PSTR("%04d-%02d-%02d %s"),timeInfo->tm_year + 1900,timeInfo->tm_mon + 1,timeInfo->tm_mday, WDAY_NAMES[timeInfo->tm_wday].c_str() );
+//  display->drawString(64 + x, 5 + y, String(buff));
   //大字体
   display->setFont(Dialog_plain_48);
   sprintf_P(buff, PSTR("%02d:%02d"), timeInfo->tm_hour, timeInfo->tm_min);
   display->drawString(64 + x, 1 + y, String(buff));
   display->setTextAlignment(TEXT_ALIGN_CENTER);
 
-
+//  display->setFont(ArialMT_Plain_10);
+//  display->setTextAlignment(TEXT_ALIGN_CENTER);
+//  display->drawString(64 + x, 38 + y, "HUM: "+String(currentWeather.hum)+"%");
   
 }
